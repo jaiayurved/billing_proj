@@ -1,0 +1,7 @@
+# Don't commit dependencies or builds
+node_modules/
+dist/
+.env
+.vscode/
+.DS_Store
+*.log

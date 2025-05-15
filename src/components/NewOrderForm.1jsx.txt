@@ -1,0 +1,210 @@
+// src/components/NewOrderForm.jsx
+import React, { useState, useEffect } from "react";
+import useToast from "../hooks/useToast";
+import { exportInvoiceToGoogleSheet } from "../utils/submitOrderToSheet";
+import { SHEET_URL } from "../components/config/gsheet";
+
+const API_KEY = "DPRTMNT54$";
+const FULL_URL = (type) => `${SHEET_URL}?type=${type}&key=${API_KEY}`;
+
+export default function NewOrderForm({ productList }) {
+  const [buyerList, setBuyerList] = useState([]);
+  const [buyer, setBuyer] = useState({ name: "" });
+  const [search, setSearch] = useState("");
+  const [cart, setCart] = useState([]);
+  const [qtyMap, setQtyMap] = useState({});
+  const [variantMap, setVariantMap] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const showToast = useToast();
+
+  useEffect(() => {
+    fetch(FULL_URL("buyers"))
+      .then((res) => res.json())
+      .then(setBuyerList)
+      .catch(() => showToast("❌ Failed to load buyers", "error"));
+  }, []);
+
+  const allCategories = [
+    "All",
+    ...new Set(productList.map((p) => p.category || p.Category || "").filter(Boolean))
+  ];
+
+  const baseMap = {};
+  productList.forEach((p) => {
+    const cat = p.category || p.Category;
+    if (selectedCategory !== "All" && cat !== selectedCategory) return;
+    const base = p.base || p.name.split(" ")[0];
+    if (!baseMap[base]) baseMap[base] = [];
+    baseMap[base].push(p);
+  });
+
+  const baseNames = [...new Set(
+    Object.keys(baseMap).filter((name) =>
+      name.toLowerCase().includes(search.toLowerCase())
+    )
+  )];
+
+  const handleAdd = (base) => {
+    const variant = variantMap[base];
+    const qty = parseInt(qtyMap[base]) || 0;
+
+    if (!variant || qty <= 0) {
+      return showToast("❗ Select variant and qty", "error");
+    }
+
+    const alreadyExists = cart.some(
+      (item) => item.item === variant.name && item.mrp === variant.MRP
+    );
+
+    if (alreadyExists) {
+      return showToast("⚠️ This item with same MRP already exists", "warning");
+    }
+
+    setCart([...cart, { item: variant.name, qty, mrp: variant.MRP }]);
+    setQtyMap({ ...qtyMap, [base]: "" });
+    showToast("✅ Item added", "success");
+  };
+
+  const handleSubmit = async () => {
+    if (!buyer.name || cart.length === 0) {
+      showToast("⚠️ Enter buyer and at least one item", "error");
+      return;
+    }
+    try {
+      await exportInvoiceToGoogleSheet({
+        dealer: buyer,
+        order: cart,
+        source: "NEW"
+      });
+      showToast("✅ Order saved to Order_List", "success");
+      setBuyer({ name: "" });
+      setCart([]);
+      setQtyMap({});
+      setVariantMap({});
+    } catch (err) {
+      showToast("❌ Failed to save order", "error");
+    }
+  };
+
+  return (
+    <div className="p-4 space-y-4 max-w-6xl mx-auto text-gray-800">
+      <div className="sticky top-0 z-10 bg-white pb-2 border-b flex justify-between items-start">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-bold text-blue-900">📋 Book New Order</h2>
+          <div className="flex gap-2 items-center">
+            <span className="text-sm text-gray-600">🧾 Items: <strong>{cart.length}</strong></span>
+          </div>
+        </div>
+        <div>
+          <select
+            value={buyer.name}
+            onChange={(e) => {
+              const selected = buyerList.find(b => b.name === e.target.value);
+              if (selected) {
+                setBuyer({ name: selected.name });
+              }
+            }}
+            className="border border-gray-300 rounded-md px-3 py-2"
+          >
+            <option value="">-- Select Buyer --</option>
+            {buyerList.map((b, i) => (
+              <option key={i} value={b.name}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-2 py-2 sticky top-[72px] z-10 bg-white">
+        {allCategories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-3 py-1 rounded-full text-sm font-medium border shadow-sm transition ${
+              selectedCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3">
+          <input
+            placeholder="Search item..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2 w-full focus:ring focus:ring-blue-200"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto mt-4">
+            {baseNames.map((base) => (
+              <div
+                key={base}
+                className="border border-gray-200 bg-white rounded-lg p-3 shadow-sm flex flex-col gap-2 min-h-[140px]"
+              >
+                <div className="text-sm font-semibold flex justify-between">
+                  {base}
+                  {cart.some(c => c.item === variantMap[base]?.name) && (
+                    <span className="text-green-600 font-bold">✔️ Added</span>
+                  )}
+                </div>
+                <select
+                  className="border border-gray-300 rounded px-2 py-1"
+                  value={variantMap[base]?.name || ""}
+                  onChange={(e) => {
+                    const selected = baseMap[base].find(v => v.name === e.target.value);
+                    setVariantMap({ ...variantMap, [base]: selected });
+                  }}
+                >
+                  <option value="">-- Select Variant --</option>
+                  {[...new Map(
+                    baseMap[base].map(v => [`${v.name}_${v.MRP}`, v])
+                  ).values()].map((v, i) => (
+                    <option key={i} value={v.name}>{v.name} {v.MRP ? `- ₹${v.MRP}` : ""}</option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="Qty"
+                    value={qtyMap[base] || ""}
+                    onChange={e => setQtyMap({ ...qtyMap, [base]: e.target.value })}
+                    className="w-16 border border-gray-300 rounded px-2 py-1"
+                  />
+                  <button
+                    onClick={() => handleAdd(base)}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {cart.length > 0 && (
+          <div className="lg:col-span-1 border border-gray-300 rounded-xl p-4 h-fit sticky top-20 bg-white shadow-md">
+            <h3 className="font-semibold text-lg mb-2">
+  🧾 Items in Order ({cart.length})
+  {buyer.name && <span className="block text-sm text-blue-800 font-bold mt-1">👤 {buyer.name}</span>}
+</h3>
+            <ul className="text-sm list-disc list-inside text-gray-700 mb-4">
+              {cart.map((r, i) => <li key={i}>{r.item} — {r.qty}</li>)}
+            </ul>
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-md shadow"
+            >
+              ✅ Save Order
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

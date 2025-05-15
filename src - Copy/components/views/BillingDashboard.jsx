@@ -57,11 +57,6 @@ export default function BillingDashboard() {
   }, []);
 
   const handleAdd = () => {
-    // Check for duplicate item + batch
-    const alreadyExists = invoiceList.some(row => row.item === itemName && row.batch === selectedBatch);
-    if (alreadyExists) {
-      return showToast("⚠️ This item with same batch already added", "error");
-    }
     if (!itemName || !selectedBatch || !qty || !rate) {
       return showToast("⚠️ Fill all fields before adding", "error");
     }
@@ -83,16 +78,7 @@ export default function BillingDashboard() {
     const updated = applySchemeDiscountToInvoice(newInvoiceList, selectedBuyer, true);
     setInvoiceList(updated);
     showToast("✅ Item added to invoice", "success");
-
-    // Scroll to bottom and back up
-    setTimeout(() => {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 1000);
-    }, 300);
   };
-    
 
   const handleRemove = (index) => {
     const updated = [...invoiceList];
@@ -177,14 +163,6 @@ export default function BillingDashboard() {
 
       {activeTab === "invoice" && (
         <>
-          <BuyerInfoPanel
-            buyerList={buyerList}
-            selectedBuyer={selectedBuyer}
-            setSelectedBuyer={setSelectedBuyer}
-            invoiceList={invoiceList}
-            setInvoiceList={setInvoiceList}
-          />
-
           <ProductEntrySection
             productList={productList}
             itemName={itemName}
@@ -202,21 +180,23 @@ export default function BillingDashboard() {
             handleAdd={handleAdd}
           />
 
-          <InvoiceSummaryPanel
+          <InvoiceSummaryPanel invoiceList={invoiceList} handleRemove={handleRemove} />
+
+          <BuyerInfoPanel
+            buyerList={buyerList}
+            selectedBuyer={selectedBuyer}
+            setSelectedBuyer={setSelectedBuyer}
             invoiceList={invoiceList}
-            handleRemove={handleRemove}
-            buyer={selectedBuyer}
+            setInvoiceList={setInvoiceList}
           />
 
-          <div className="sticky bottom-0 z-20 bg-white py-4 border-t shadow-inner">
-            <ExportActions
-              selectedBuyer={selectedBuyer}
-              invoiceList={invoiceList}
-              onSubmit={handleFinalSubmit}
-              generatePDF={() => generatePDFInvoice(selectedBuyer, invoiceList)}
-              exportCSV={() => exportInvoiceToCSV(selectedBuyer, invoiceList)}
-            />
-          </div>
+          <ExportActions
+            selectedBuyer={selectedBuyer}
+            invoiceList={invoiceList}
+            onSubmit={handleFinalSubmit}
+            generatePDF={() => generatePDFInvoice(selectedBuyer, invoiceList)}
+            exportCSV={() => exportInvoiceToCSV(selectedBuyer, invoiceList)}
+          />
         </>
       )}
     </div>

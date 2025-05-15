@@ -15,10 +15,7 @@ export default function ProductEntrySection({
   setRate,
   qty,
   setQty,
-  handleAdd,
-  hideAddButton = false,
-  readOnly = false,
-  onAfterAdd = null
+  handleAdd
 }) {
   const batchList = productList
     .filter((p) => p.name === itemName)
@@ -50,7 +47,6 @@ export default function ProductEntrySection({
         <select
           value={itemName}
           onChange={(e) => setItemName(e.target.value)}
-          disabled={readOnly}
           className="w-full border px-3 py-2 rounded"
         >
           <option value="">-- Select Item --</option>
@@ -65,7 +61,6 @@ export default function ProductEntrySection({
         <select
           value={selectedBatch}
           onChange={(e) => setSelectedBatch(e.target.value)}
-          disabled={readOnly}
           className="w-full border px-3 py-2 rounded"
         >
           <option value="">-- Select Batch --</option>
@@ -81,7 +76,6 @@ export default function ProductEntrySection({
           type="number"
           value={qty}
           onChange={(e) => setQty(e.target.value)}
-          readOnly={readOnly}
           className="w-full border px-3 py-2 rounded"
           placeholder="Enter quantity"
         />
@@ -112,28 +106,19 @@ export default function ProductEntrySection({
         <input
           type="text"
           value={rate}
-          onChange={(e) => setRate(e.target.value)}
-          readOnly={readOnly}
-          className="w-24 border px-3 py-2 rounded"
+          readOnly
+          className="w-24 border px-3 py-2 bg-gray-100 rounded"
         />
       </div>
 
-      {!hideAddButton && (
-        <div className="col-span-6 text-right pt-2">
-          <button
-            onClick={() => {
-              handleAdd();
-              setItemName("");
-              setSelectedBatch("");
-              setQty("");
-              if (typeof onAfterAdd === 'function') onAfterAdd();
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow"
-          >
-            ➕ Add to Invoice
-          </button>
-        </div>
-      )}
+      <div className="col-span-6 text-right pt-2">
+        <button
+          onClick={handleAdd}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow"
+        >
+          ➕ Add to Invoice
+        </button>
+      </div>
     </div>
   );
 }

@@ -57,11 +57,6 @@ export default function BillingDashboard() {
   }, []);
 
   const handleAdd = () => {
-    // Check for duplicate item + batch
-    const alreadyExists = invoiceList.some(row => row.item === itemName && row.batch === selectedBatch);
-    if (alreadyExists) {
-      return showToast("⚠️ This item with same batch already added", "error");
-    }
     if (!itemName || !selectedBatch || !qty || !rate) {
       return showToast("⚠️ Fill all fields before adding", "error");
     }
@@ -83,16 +78,7 @@ export default function BillingDashboard() {
     const updated = applySchemeDiscountToInvoice(newInvoiceList, selectedBuyer, true);
     setInvoiceList(updated);
     showToast("✅ Item added to invoice", "success");
-
-    // Scroll to bottom and back up
-    setTimeout(() => {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 1000);
-    }, 300);
   };
-    
 
   const handleRemove = (index) => {
     const updated = [...invoiceList];

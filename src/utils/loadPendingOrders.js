@@ -29,6 +29,7 @@ export async function loadPendingOrders() {
           orderItems: []
         };
       }
+
       grouped[row.buyerName].orderItems.push({
         item: row.item,
         plannedQty: parseInt(row.qty) || 0

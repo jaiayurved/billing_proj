@@ -1,5 +1,4 @@
-// src/components/PendingOrderPanel.jsx
-import React, { useEffect } from "react";
+import React from "react";
 import ProductEntrySection from "./invoice/ProductEntrySection";
 import InvoiceSummaryPanel from "./invoice/InvoiceSummaryPanel";
 import { applySchemeDiscountToInvoice } from "../utils/cartUtils";
@@ -16,7 +15,6 @@ export default function PendingOrderPanel({
   setItemName,
   qty,
   setQty,
-  batchList,
   selectedBatch,
   setSelectedBatch,
   mfg,
@@ -36,30 +34,17 @@ export default function PendingOrderPanel({
   setInvoiceList,
   buyerList
 }) {
-  useEffect(() => {
-    const product = productList.find(
-      (p) => p.name === itemName && p.Batch === selectedBatch
-    );
-    if (product) {
-      setMfg(
-        new Date(product.mfgDate)
-          .toLocaleDateString("en-GB", { month: "short", year: "2-digit" })
-          .replace(" ", "-")
-      );
-      setExp(
-        new Date(product.expDate)
-          .toLocaleDateString("en-GB", { month: "short", year: "2-digit" })
-          .replace(" ", "-")
-      );
-      setRate(product.Rate || product.MRP || "");
-    }
-  }, [itemName, selectedBatch]);
-
   return (
     <div className="space-y-6 bg-green-50 min-h-screen p-4">
       <div className="flex gap-6">
         <div className="w-1/4 bg-white border shadow rounded p-3">
-          <h3 className="font-semibold text-gray-800 mb-2">👤 {selectedPendingBuyer?.name || "Select a buyer"}</h3>
+          <h3 className="font-semibold text-gray-800 mb-2">
+            👤 {selectedPendingBuyer?.name || "Select a buyer"}{" "}
+            <span className="text-xs text-gray-500 ml-1">
+              ({selectedPendingBuyer?.type || "Type Unknown"})
+            </span>
+          </h3>
+
           {selectedPendingBuyer && Array.isArray(pendingQueue) && pendingQueue.length > 0 && (
             <ul className="space-y-1">
               {pendingQueue.map((item, idx) => (
@@ -71,6 +56,15 @@ export default function PendingOrderPanel({
                       : "bg-blue-50 hover:bg-blue-100 text-gray-800"
                   }`}
                   onClick={() => {
+                    const buyerMatch = buyerList?.find(b => b.name === selectedPendingBuyer?.name) || {};
+                    const enriched = {
+                      ...selectedPendingBuyer,
+                      ...buyerMatch,
+                      discount: buyerMatch?.discount || buyerMatch?.dis1 || 0,
+                      scheme: buyerMatch?.scheme || "0+0"
+                    };
+                    setSelectedBuyer(enriched);
+                    setInvoiceList(applySchemeDiscountToInvoice(invoiceList, enriched, true));
                     setCurrentPendingIndex(idx);
                     setItemName(item.name || item.item);
                     setQty(item.qty || item.plannedQty);
@@ -85,7 +79,7 @@ export default function PendingOrderPanel({
         </div>
 
         <div className="w-3/4 space-y-4">
-<h2 className="text-xl font-bold text-gray-700">🧾 Process Items</h2>
+          <h2 className="text-xl font-bold text-gray-700">🧾 Process Items</h2>
 
           <div className="text-sm text-gray-700 font-medium bg-blue-50 px-4 py-2 rounded border border-blue-200">
             Processing: {selectedPendingBuyer?.name || "-"} — Item {currentPendingIndex + 1} of {pendingQueue.length}
@@ -151,32 +145,33 @@ export default function PendingOrderPanel({
             </button>
           </div>
 
-          <div id="invoice-table" className="w-full">
+          <div id="invoice-table" className="w-full sticky top-32">
             <InvoiceSummaryPanel invoiceList={invoiceList} handleRemove={handleRemove} />
           </div>
         </div>
       </div>
 
+      {/* All Buyers Card View */}
       <div className="bg-white border shadow rounded p-4 sticky bottom-0 z-10">
         <h3 className="font-semibold text-gray-800 mb-2">📋 All Pending Buyers</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {pendingOrders.map((order, idx) => {
-            const buyerData = Array.isArray(buyerList) ? buyerList.find(b => b.name === order.buyer.name) : {};
-            const enrichedBuyer = {
-              ...order.buyer,
-              ...buyerData,
-              discount: buyerData?.discount || buyerData?.dis1 || 0,
-              scheme: buyerData?.scheme || "0+0"
-            };
+         {pendingOrders.map((order, idx) => {
+  const match = Array.isArray(buyerList) ? buyerList.find(b => b.name === order.buyer.name) : {};
+  const enriched = {
+    ...order.buyer,
+    ...match,
+    discount: match?.discount || match?.dis1 || 0,
+    scheme: match?.scheme || "0+0",
+    type: match?.type || ""
+  };
             return (
               <button
                 key={idx}
                 onClick={() => {
-                  setSelectedPendingBuyer(order.buyer);
-                  setSelectedBuyer(enrichedBuyer);
+                  setSelectedPendingBuyer(enriched);
+                  setSelectedBuyer(enriched);
                   setPendingQueue(order.items);
-                  const updated = applySchemeDiscountToInvoice(invoiceList, enrichedBuyer, true);
-                  setInvoiceList(updated);
+                  setInvoiceList(applySchemeDiscountToInvoice(invoiceList, enriched, true));
                   setCurrentPendingIndex(0);
                   if (order.items.length > 0) {
                     const firstItem = order.items[0];

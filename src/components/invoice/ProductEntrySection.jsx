@@ -18,11 +18,26 @@ export default function ProductEntrySection({
   handleAdd,
   hideAddButton = false,
   readOnly = false,
-  onAfterAdd = null
+  onAfterAdd = null,
+  expectedQty = null
 }) {
-  const batchList = productList
-    .filter((p) => p.name === itemName)
-    .map((p) => p.Batch);
+  const batchList = Array.from(
+    new Set(
+      productList
+        .filter((p) => p.name === itemName && p.Batch?.trim())
+        .map((p) => p.Batch)
+    )
+  );
+
+  useEffect(() => {
+    const batches = productList
+      .filter((p) => p.name === itemName && p.Batch?.trim())
+      .map((p) => p.Batch);
+    if (batches.length > 0) {
+      const latestBatch = batches.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0];
+      setSelectedBatch(latestBatch);
+    }
+  }, [itemName]);
 
   useEffect(() => {
     const product = productList.find(
@@ -41,13 +56,14 @@ export default function ProductEntrySection({
       );
       setRate(product.Rate || product.MRP || "");
     }
-  }, [itemName, selectedBatch]);
+  }, [selectedBatch]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700">Item Name</label>
         <select
+          id="item-select"
           value={itemName}
           onChange={(e) => setItemName(e.target.value)}
           disabled={readOnly}
@@ -123,16 +139,30 @@ export default function ProductEntrySection({
           <button
             onClick={() => {
               handleAdd();
+              if (expectedQty) {
+                const used = parseInt(qty || 0);
+                const remaining = expectedQty - used;
+                if (remaining > 0) {
+                  setQty(remaining);
+                  return;
+                }
+              }
               setItemName("");
               setSelectedBatch("");
               setQty("");
+              const el = document.getElementById("item-select");
+              if (el) {
+                el.classList.add("ring-2", "ring-blue-400");
+                el.focus();
+                setTimeout(() => el.classList.remove("ring-2", "ring-blue-400"), 1200);
+              }
               if (typeof onAfterAdd === 'function') onAfterAdd();
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow"
           >
-            ➕ Add to Invoice
-          </button>
-        </div>
+            ➕ Add to Invoice</button>
+          
+          </div>
       )}
     </div>
   );

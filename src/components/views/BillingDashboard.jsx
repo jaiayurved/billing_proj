@@ -14,9 +14,11 @@ import BuyerInfoPanel from "../invoice/BuyerInfoPanel";
 import ExportActions from "../invoice/ExportActions";
 import PendingOrderPanel from "../PendingOrderPanel";
 import NewOrderForm from "../NewOrderForm";
+import QuickPendingPanel from "../invoice/QuickPendingPanel";
 import { loadPendingOrders } from "../../utils/loadPendingOrders";
 
 export default function BillingDashboard() {
+  const [highlightBuyer, setHighlightBuyer] = useState(false);
   const [activeTab, setActiveTab] = useState("invoice");
 
   const [buyerList, setBuyerList] = useState([]);
@@ -57,7 +59,6 @@ export default function BillingDashboard() {
   }, []);
 
   const handleAdd = () => {
-    // Check for duplicate item + batch
     const alreadyExists = invoiceList.some(row => row.item === itemName && row.batch === selectedBatch);
     if (alreadyExists) {
       return showToast("⚠️ This item with same batch already added", "error");
@@ -65,9 +66,7 @@ export default function BillingDashboard() {
     if (!itemName || !selectedBatch || !qty || !rate) {
       return showToast("⚠️ Fill all fields before adding", "error");
     }
-    const product = productList.find(
-      (p) => p.name === itemName && p.Batch === selectedBatch
-    );
+    const product = productList.find(p => p.name === itemName && p.Batch === selectedBatch);
     const row = {
       item: itemName,
       batch: selectedBatch,
@@ -84,7 +83,6 @@ export default function BillingDashboard() {
     setInvoiceList(updated);
     showToast("✅ Item added to invoice", "success");
 
-    // Scroll to bottom and back up
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       setTimeout(() => {
@@ -92,7 +90,6 @@ export default function BillingDashboard() {
       }, 1000);
     }, 300);
   };
-    
 
   const handleRemove = (index) => {
     const updated = [...invoiceList];
@@ -111,31 +108,13 @@ export default function BillingDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8 text-gray-800">
-      {/* Tabs */}
       <div className="sticky top-0 z-20 bg-blue-100/40 backdrop-blur-md flex justify-center gap-4 py-3 shadow-sm border-b">
-        <button
-          onClick={() => setActiveTab("new")}
-          className={`${activeTab === "new" ? "bg-green-600" : "bg-green-500"} hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-md shadow`}
-        >
-          🆕 Punch New Order
-        </button>
-        <button
-          onClick={() => setActiveTab("pending")}
-          className={`${activeTab === "pending" ? "bg-blue-600" : "bg-blue-500"} hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow`}
-        >
-          📋 Pending Orders
-        </button>
-        <button
-          onClick={() => setActiveTab("invoice")}
-          className={`${activeTab === "invoice" ? "bg-purple-600" : "bg-purple-500"} hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded-md shadow`}
-        >
-          🧾 Invoice Screen
-        </button>
+        <button onClick={() => setActiveTab("new")} className={`${activeTab === "new" ? "bg-green-600" : "bg-green-500"} hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-md shadow`}>🆕 Punch New Order</button>
+        <button onClick={() => setActiveTab("pending")} className={`${activeTab === "pending" ? "bg-blue-600" : "bg-blue-500"} hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow`}>📋 Pending Orders</button>
+        <button onClick={() => setActiveTab("invoice")} className={`${activeTab === "invoice" ? "bg-purple-600" : "bg-purple-500"} hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded-md shadow`}>🧾 Invoice Screen</button>
       </div>
 
-      <h1 className="text-3xl font-bold text-center text-blue-900">
-        📦 Billing Dashboard
-      </h1>
+      <h1 className="text-3xl font-bold text-center text-blue-900">📦 Billing Dashboard</h1>
 
       {activeTab === "pending" && (
         <PendingOrderPanel
@@ -168,22 +147,41 @@ export default function BillingDashboard() {
           selectedBuyer={selectedBuyer}
           setSelectedBuyer={setSelectedBuyer}
           setInvoiceList={setInvoiceList}
+          buyerList={buyerList}
         />
       )}
 
-      {activeTab === "new" && (
-        <NewOrderForm productList={productList} />
-      )}
+      {activeTab === "new" && <NewOrderForm productList={productList} />}
 
       {activeTab === "invoice" && (
         <>
-          <BuyerInfoPanel
-            buyerList={buyerList}
-            selectedBuyer={selectedBuyer}
-            setSelectedBuyer={setSelectedBuyer}
-            invoiceList={invoiceList}
-            setInvoiceList={setInvoiceList}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`text-xs p-1 border border-yellow-400 bg-yellow-100 rounded shadow ring-1 ring-yellow-200 transition-all duration-500 ${highlightBuyer ? 'animate-pulse' : ''}`}>
+              <BuyerInfoPanel
+                buyerList={buyerList}
+                selectedBuyer={selectedBuyer}
+                setSelectedBuyer={setSelectedBuyer}
+                invoiceList={invoiceList}
+                setInvoiceList={setInvoiceList}
+              />
+            </div>
+<div className="h-[220px] overflow-y-auto">
+  <QuickPendingPanel
+    pendingOrders={pendingOrders}
+    buyerList={buyerList}
+    setSelectedBuyer={setSelectedBuyer}
+    setSelectedPendingBuyer={setSelectedPendingBuyer}
+    setPendingQueue={setPendingQueue}
+    setCurrentPendingIndex={setCurrentPendingIndex}
+    currentPendingIndex={currentPendingIndex}
+    setItemName={setItemName}
+    setQty={setQty}
+    handleAdd={handleAdd}
+    showToast={showToast}
+    invoiceList={invoiceList}
+  />
+</div>
+          </div>
 
           <ProductEntrySection
             productList={productList}

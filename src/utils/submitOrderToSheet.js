@@ -4,11 +4,11 @@ import { SHEET_URL } from "../components/config/gsheet";
 const API_KEY = "DPRTMNT54$";
 const POST_URL = `${SHEET_URL}?key=${API_KEY}`;
 
-export async function exportInvoiceToGoogleSheet({ dealer, order, source = "NEW" }) {
+export async function exportInvoiceToGoogleSheet({ buyerName, phone, order, source = "NEW" }) {
   try {
     const response = await fetch(POST_URL, {
       method: "POST",
-      body: JSON.stringify({ dealer, order, source }),
+      body: JSON.stringify({ buyerName, phone, order, source }),
       headers: {
         "Content-Type": "application/json"
       }

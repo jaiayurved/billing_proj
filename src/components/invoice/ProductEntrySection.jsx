@@ -92,7 +92,8 @@ export default function ProductEntrySection({
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-end">
+    <div className="flex flex-wrap gap-2 items-end">
+
       <div className="col-span-2">
         <label className="block text-sm font-medium text-gray-700">Item Name</label>
         <select

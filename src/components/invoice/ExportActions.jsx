@@ -1,40 +1,63 @@
 // src/components/invoice/ExportActions.jsx
 import React from "react";
+import { Send, FileText, FileDown, Printer } from "lucide-react";
+import { printPDFInvoice } from "../export/InvoiceExporter";
 
-export default function ExportActions({ selectedBuyer, invoiceList, onSubmit, generatePDF, exportCSV }) {
-  const isDisabled = !selectedBuyer || invoiceList.length === 0;
+
+
+
+
+
+export default function ExportActions({
+  selectedBuyer,
+  invoiceList,
+  onSubmit,
+  generatePDF,
+  exportCSV
+}) {
+  const disabled = !selectedBuyer || invoiceList.length === 0;
 
   return (
-    <div className="flex flex-wrap justify-center gap-4 pt-4">
-      <button
-        onClick={onSubmit}
-        disabled={isDisabled}
-        className={`px-6 py-2 rounded-xl font-semibold shadow transition text-white ${
-          isDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-green-700 hover:bg-green-800"
-        }`}
-      >
-        ✅ Finalize & Send WhatsApp
-      </button>
+    <div className="w-full border-t pt-4 mt-4">
+      <div className="flex justify-center gap-6 text-gray-700 items-center">
 
-      <button
-        onClick={generatePDF}
-        disabled={isDisabled}
-        className={`px-6 py-2 rounded-xl font-semibold shadow transition text-white ${
-          isDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"
-        }`}
-      >
-        🧾 Export PDF
-      </button>
+        <button
+          onClick={onSubmit}
+          disabled={disabled}
+          title="Send WhatsApp"
+          className={`transition hover:text-green-600 ${disabled ? "opacity-30 cursor-not-allowed" : ""}`}
+        >
+          <Send size={28} />
+        </button>
 
-      <button
-        onClick={exportCSV}
-        disabled={isDisabled}
-        className={`px-6 py-2 rounded-xl font-semibold shadow transition text-white ${
-          isDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-600"
-        }`}
-      >
-        ⬇️ Download CSV
-      </button>
+        <button
+          onClick={generatePDF}
+          disabled={disabled}
+          title="Download PDF"
+          className={`transition hover:text-purple-600 ${disabled ? "opacity-30 cursor-not-allowed" : ""}`}
+        >
+          <FileText size={28} />
+        </button>
+
+        <button
+          onClick={exportCSV}
+          disabled={disabled}
+          title="Download CSV"
+          className={`transition hover:text-yellow-600 ${disabled ? "opacity-30 cursor-not-allowed" : ""}`}
+        >
+          <FileDown size={28} />
+        </button>
+
+        <button
+          onClick={() => printPDFInvoice(selectedBuyer, invoiceList)}
+          disabled={disabled}
+          title="Print Invoice"
+          className={`transition hover:text-blue-600 ${disabled ? "opacity-30 cursor-not-allowed" : ""}`}
+        >
+          <Printer size={28} />
+        </button>
+
+      </div>
     </div>
   );
 }

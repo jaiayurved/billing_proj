@@ -60,6 +60,37 @@ export function exportInvoiceToCSV(buyer, invoiceList) {
   document.body.removeChild(link);
 }
 
+
+export function printPDFInvoice(buyer, cart) {
+  const Component = buyer?.type === "AMA" ? PDFInvoiceAMA : PDFInvoiceJAI;
+  const markup = renderToStaticMarkup(React.createElement(Component, { buyer, cart }));
+
+  const container = document.createElement("div");
+  container.innerHTML = markup;
+
+  html2pdf()
+    .from(container)
+    .set({ margin: 0.5, jsPDF: { format: "a4" } })
+    .toPdf()
+    .get('pdf')
+    .then(pdf => {
+      pdf.autoPrint();
+      window.open(pdf.output('bloburl'), '_blank');
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function generatePDFInvoice(buyer, cart) {
   const Component = buyer?.type === "AMA" ? PDFInvoiceAMA : PDFInvoiceJAI;
   const markup = renderToStaticMarkup(React.createElement(Component, { buyer, cart }));

@@ -38,7 +38,10 @@ export async function loadPendingOrders() {
 
     return Object.values(grouped).map(order => ({
       buyer: order.buyer,
-      items: order.orderItems.map(i => ({ name: i.item, qty: i.plannedQty }))
+      orderItems: order.orderItems.map(i => ({
+        item: i.item,
+        qty: i.plannedQty
+      }))
     }));
   } catch (err) {
     console.error("❌ Error loading pending orders:", err);

@@ -1,6 +1,6 @@
 // src/components/views/BillingDashboard.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import useToast from "../../hooks/useToast";
 import {
   openWhatsAppWithInvoice,
@@ -35,13 +35,22 @@ export default function BillingDashboard() {
   const [pendingOrders, setPendingOrders] = useState([]);
   const showToast = useToast();
 
+  const bottomRef = useRef(null);
+
   const API_KEY = "DPRTMNT54$";
   const FULL_URL = (type) => `${SHEET_URL}?type=${type}&key=${API_KEY}`;
 
   useEffect(() => {
     fetch(FULL_URL("buyers")).then(res => res.json()).then(setBuyerList);
     fetch(FULL_URL("products")).then(res => res.json()).then(setProductList);
-    loadPendingOrders().then(setPendingOrders).catch(() => showToast("❌ Failed to load pending orders", "error"));
+    loadPendingOrders()
+      .then(setPendingOrders)
+      .catch(() => showToast("❌ Failed to load pending orders", "error"));
+
+    // Scroll down by default on load
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 500);
   }, []);
 
   const handleAdd = () => {
@@ -65,6 +74,11 @@ export default function BillingDashboard() {
     const updated = applySchemeDiscountToInvoice([...invoiceList, row], selectedBuyer, true);
     setInvoiceList(updated);
     showToast("✅ Item added to invoice", "success");
+
+    // Smooth scroll to bottomRef
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
   };
 
   const handleRemove = (index) => {
@@ -168,7 +182,7 @@ export default function BillingDashboard() {
             </div>
           </div>
 
-          <div className="sticky bottom-0 z-20 bg-white py-1 border-t shadow-inner flex justify-between items-center gap-2 px-3">
+          <div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-1 border-t shadow-inner flex justify-between items-center gap-2 px-3">
             <button
               onClick={() => setActiveTab("new")}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm"

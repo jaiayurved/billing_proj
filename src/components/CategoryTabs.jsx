@@ -2,7 +2,7 @@ import React from "react";
 
 export default function CategoryTabs({ allCategories, selectedCategory, setSelectedCategory }) {
   return (
-    <div className="flex flex-wrap gap-2 py-2 sticky top-[72px] z-10 bg-white">
+    <div className="flex flex-wrap gap-2 py-2">
       {allCategories.map((cat) => (
         <button
           key={cat}

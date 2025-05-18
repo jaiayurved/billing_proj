@@ -36,10 +36,6 @@ export default function BillingDashboard() {
   const bottomRef = useRef(null);
   const topRef = useRef(null);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const API_KEY = "DPRTMNT54$";
   const FULL_URL = (type) => `${SHEET_URL}?type=${type}&key=${API_KEY}`;
 
@@ -56,12 +52,8 @@ export default function BillingDashboard() {
   }, []);
 
   useEffect(() => {
-    scrollToTop();
-  }, [activeTab]);
-
-  useEffect(() => {
     if (selectedPendingBuyer) {
-      scrollToTop();
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [selectedPendingBuyer]);
 
@@ -87,14 +79,6 @@ export default function BillingDashboard() {
     setInvoiceList(updated);
     showToast("✅ Item added to invoice", "success");
 
-    // Clear fields after adding
-    setItemName("");
-    setSelectedBatch("");
-    setMfg("");
-    setExp("");
-    setRate("");
-    setQty("");
-
     setTimeout(() => {
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, 100);
@@ -111,11 +95,10 @@ export default function BillingDashboard() {
     const updated = applySchemeDiscountToInvoice(invoiceList, selectedBuyer, true);
     setInvoiceList(updated);
     openWhatsAppWithInvoice(selectedBuyer, updated);
-    scrollToTop();
   };
 
   const handleAfterAdd = () => {
-    const next = pendingQueue[invoiceList.length];
+    const next = pendingQueue[invoiceList.length + 1];
     if (next) {
       setItemName(next.item || next.name);
       setQty(next.qty || next.plannedQty || 1);
@@ -178,14 +161,10 @@ export default function BillingDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start border-t pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start border-t pt-4">
             <div className="bg-blue-100 rounded-xl shadow p-4 border h-full overflow-y-auto max-h-[400px] pb-[80px]">
               <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">
-                ✍️ Product Entry ({invoiceList.length}) {selectedBuyer?.name && (
-                  <span className="ml-2 px-2 py-0.5 rounded bg-blue-200 text-blue-800 text-xs">
-                    🧑 {selectedBuyer.name}
-                  </span>
-                )}
+                ✍️ Product Entry ({invoiceList.length}) {selectedBuyer?.name && <span className="text-blue-900 font-bold ml-2">🧍 {selectedBuyer.name}</span>}
               </h3>
               {productEntryUI}
             </div>
@@ -197,13 +176,10 @@ export default function BillingDashboard() {
             </div>
 
             <div className="bg-slate-100 rounded-xl shadow p-4 border h-full">
-              <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">🧑 Buyer Details</h3>
+              <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">🧍 Buyer Details</h3>
               <BuyerSwitcherPanel
                 selectedBuyer={selectedBuyer}
-                setSelectedBuyer={(buyer) => {
-                  setSelectedBuyer(buyer);
-                  scrollToTop();
-                }}
+                setSelectedBuyer={setSelectedBuyer}
                 selectedPendingBuyer={selectedPendingBuyer}
                 setSelectedPendingBuyer={setSelectedPendingBuyer}
                 buyerList={buyerList}
@@ -222,10 +198,10 @@ export default function BillingDashboard() {
             </div>
           </div>
 
-          <div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-2 border-t shadow-inner flex flex-col sm:flex-row justify-between items-center gap-2 px-3">
+          <div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-0.5 border-t shadow-inner flex justify-between items-center gap-2 px-3">
             <button
               onClick={() => setActiveTab("new")}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm w-full sm:w-auto"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm"
             >
               🆕 Punch New Order
             </button>
@@ -241,7 +217,6 @@ export default function BillingDashboard() {
                 setPendingQueue([]);
                 setItemName("");
                 setQty("");
-                scrollToTop();
               }}
               exportCSV={() => exportInvoiceToCSV(selectedBuyer, invoiceList)}
             />
@@ -251,7 +226,10 @@ export default function BillingDashboard() {
 
       {activeTab === "new" && productList.length > 0 && (
         <div className="mt-6">
-          <NewOrderForm productList={productList} setActiveTab={setActiveTab} />
+          {activeTab === "new" && (
+  <NewOrderForm productList={productList} setActiveTab={setActiveTab} />
+)}
+
         </div>
       )}
     </div>

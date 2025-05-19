@@ -223,7 +223,8 @@ export default function BillingDashboard() {
           <div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-2 border-t shadow-inner flex flex-col sm:flex-row justify-between items-center gap-2 px-3">
             <button
               onClick={() => setActiveTab("new")}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm w-full sm:w-auto"
+              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded shadow text-xs w-full sm:w-auto"
+
             >
               🆕 Punch New Order
             </button>
@@ -235,8 +236,8 @@ export default function BillingDashboard() {
             <button
     
     onClick={() => setActiveTab("summary")}
-className="bg-blue-400 hover:bg-blue-600 text-white px-4 py-2 rounded shadow text-sm w-full sm:w-auto"
-            >
+className="bg-blue-600 hover:bg-green-700 text-white px-2 py-1 rounded shadow text-xs w-full sm:w-auto"
+>
   
     🔎 View Summary
   </button>

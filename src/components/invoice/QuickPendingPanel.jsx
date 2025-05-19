@@ -20,7 +20,7 @@ export default function QuickPendingPanel({
 
     setItemName(name);
     setQty(item.qty || item.plannedQty || 1);
-    showToast(`🧾 Selected: ${name}`, "info");
+    showToast(`📟 Selected: ${name}`, "info");
 
     if (autoScrollToNext) {
       setTimeout(() => {
@@ -31,13 +31,9 @@ export default function QuickPendingPanel({
   };
 
   return (
-
-
-
-
-    <div className="space-y-1 text-sm max-h-[250px] overflow-y-auto px-1">
+    <div className="space-y-1 text-sm h-[300px] overflow-auto px-1 whitespace-nowrap">
       {Array.isArray(pendingQueue) && pendingQueue.length === 0 && (
-        <div className="text-gray-500 text-xs">📭 No pending items.</div>
+        <div className="text-gray-500 text-xs">📝 No pending items.</div>
       )}
 
       {Array.isArray(pendingQueue) &&
@@ -67,7 +63,6 @@ export default function QuickPendingPanel({
               <span className="text-xs font-semibold text-gray-600">
                 Qty: {item.qty || item.plannedQty || 0}
               </span>
-
             </div>
           );
         })}

@@ -169,17 +169,11 @@ export default function BillingDashboard() {
 
       {activeTab === "invoice" && (
         <>
-          <div className="flex justify-end">
-            <button
-              className="text-sm text-blue-600 underline"
-              onClick={() => setActiveTab("summary")}
-            >
-              🔎 View Summary
-            </button>
-          </div>
+          
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start border-t pt-4">
-            <div className="bg-blue-100 rounded-xl shadow p-4 border h-full overflow-y-auto max-h-[400px] pb-[80px]">
+            <div className="bg-blue-100 rounded-xl shadow p-4 border h-full overflow-y-auto max-h-[400px] pb-[80px] sticky top-0 z-10 md:static">
+
               <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">
                 ✍️ Product Entry ({invoiceList.length}) {selectedBuyer?.name && (
                   <span className="ml-2 px-2 py-0.5 rounded bg-blue-200 text-blue-800 text-xs">
@@ -190,7 +184,11 @@ export default function BillingDashboard() {
               {productEntryUI}
             </div>
 
-            <div className="bg-slate-200 rounded-xl shadow p-4 border h-full relative max-h-[400px] overflow-y-auto">
+            <div className={`rounded-xl shadow p-4 border relative overflow-auto h-[400px] ${
+  selectedPendingBuyer && pendingQueue.length > 0 ? 'bg-yellow-100' : 'bg-slate-200'
+}`}>
+
+
               <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">📌 Pending Items ({pendingQueue.length})</h3>
               {quickPendingUI}
               <div className="absolute bottom-0 left-0 w-full h-6 bg-gradient-to-b from-transparent to-slate-200"></div>
@@ -229,6 +227,24 @@ export default function BillingDashboard() {
             >
               🆕 Punch New Order
             </button>
+
+
+
+
+<div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-2 border-t shadow-inner flex flex-col sm:flex-row justify-between items-center gap-2 px-3">
+            <button
+    
+    onClick={() => setActiveTab("summary")}
+className="bg-blue-400 hover:bg-blue-600 text-white px-4 py-2 rounded shadow text-sm w-full sm:w-auto"
+            >
+  
+    🔎 View Summary
+  </button>
+</div>
+
+
+
+
             <ExportActions
               selectedBuyer={selectedBuyer}
               invoiceList={invoiceList}

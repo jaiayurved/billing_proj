@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import useToast from "../../hooks/useToast";
 import {
@@ -6,7 +7,6 @@ import {
   exportInvoiceToCSV,
 } from "../export/InvoiceExporter";
 import { applySchemeDiscountToInvoice } from "../../utils/cartUtils";
-import { SHEET_URL } from "../config/gsheet";
 import { loadPendingOrders } from "../../utils/loadPendingOrders";
 
 import ExportActions from "../invoice/ExportActions";
@@ -32,6 +32,7 @@ export default function BillingDashboard() {
   const [pendingQueue, setPendingQueue] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
   const showToast = useToast();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const bottomRef = useRef(null);
   const topRef = useRef(null);
@@ -40,12 +41,9 @@ export default function BillingDashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const API_KEY = "DPRTMNT54$";
-  const FULL_URL = (type) => `${SHEET_URL}?type=${type}&key=${API_KEY}`;
-
   useEffect(() => {
-    fetch(FULL_URL("buyers")).then(res => res.json()).then(setBuyerList);
-    fetch(FULL_URL("products")).then(res => res.json()).then(setProductList);
+    fetch(`${API_URL}/api/buyers`).then(res => res.json()).then(setBuyerList);
+    fetch(`${API_URL}/api/products`).then(res => res.json()).then(setProductList);
     loadPendingOrders()
       .then(setPendingOrders)
       .catch(() => showToast("❌ Failed to load pending orders", "error"));
@@ -231,7 +229,6 @@ export default function BillingDashboard() {
         </div>
       )}
 
-      {/* Hidden buttons for tab switching from ExportActions */}
       <button id="new-order-tab" className="hidden" onClick={() => setActiveTab("new")}></button>
       <button id="view-summary-tab" className="hidden" onClick={() => setActiveTab("summary")}></button>
     </div>

@@ -1,27 +1,20 @@
-// src/utils/loadPendingOrders.js
-import { SHEET_URL } from "../components/config/gsheet";
-
-const API_KEY = "DPRTMNT54$";
-const FULL_URL = `${SHEET_URL}?type=pendingOrders&key=${API_KEY}`;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function loadPendingOrders() {
   try {
-    const res = await fetch(FULL_URL);
+    const res = await fetch(`${API_URL}/api/orders`);
     const data = await res.json();
 
-    if (!Array.isArray(data)) {
-      console.error("❌ Invalid response format from Google Sheet:", data);
-      return [];
-    }
+    if (!Array.isArray(data)) return [];
 
     const grouped = {};
     for (const row of data) {
-      if (!row.buyerName || !row.item || !row.qty) continue;
+      if (!row.dealer || !row.item || !row.qty) continue;
 
-      if (!grouped[row.buyerName]) {
-        grouped[row.buyerName] = {
+      if (!grouped[row.dealer]) {
+        grouped[row.dealer] = {
           buyer: {
-            name: row.buyerName,
+            name: row.dealer,
             gstin: row.gstin || "",
             city: row.city || "",
             type: row.type || ""
@@ -30,19 +23,13 @@ export async function loadPendingOrders() {
         };
       }
 
-      grouped[row.buyerName].orderItems.push({
+      grouped[row.dealer].orderItems.push({
         item: row.item,
-        plannedQty: parseInt(row.qty) || 0
+        qty: parseInt(row.qty) || 0
       });
     }
 
-    return Object.values(grouped).map(order => ({
-      buyer: order.buyer,
-      orderItems: order.orderItems.map(i => ({
-        item: i.item,
-        qty: i.plannedQty
-      }))
-    }));
+    return Object.values(grouped);
   } catch (err) {
     console.error("❌ Error loading pending orders:", err);
     return [];

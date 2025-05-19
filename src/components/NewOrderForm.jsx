@@ -1,14 +1,13 @@
-// src/components/NewOrderForm.jsx
+
 import React, { useState, useEffect } from "react";
 import useToast from "../hooks/useToast";
 import useCartStorage from "../hooks/useCartStorage";
-import { exportInvoiceToGoogleSheet } from "../utils/submitOrderToSheet";
 import { openWhatsAppWithInvoice, exportInvoiceToCSV } from "./export/InvoiceExporter";
-import { SHEET_URL } from "../components/config/gsheet";
+import { exportInvoiceToLocalServer } from "../utils/submitOrderToAPI";
 import { useNavigate } from "react-router-dom";
 
 export default function NewOrderForm({ productList, setActiveTab }) {
-  
+  const API_URL = import.meta.env.VITE_API_URL;
   const [buyerList, setBuyerList] = useState([]);
   const [buyer, setBuyer] = useState({});
   const [search, setSearch] = useState("");
@@ -19,20 +18,19 @@ export default function NewOrderForm({ productList, setActiveTab }) {
   const [variantMap, setVariantMap] = useState({});
 
   const showToast = useToast();
-  const API_KEY = "DPRTMNT54$";
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${SHEET_URL}?type=buyers&key=${API_KEY}`)
+    fetch(`${API_URL}/api/buyers`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setBuyerList(data);
         else {
-          showToast("\u274C Invalid buyer list received", "error");
+          showToast("❌ Invalid buyer list received", "error");
           setBuyerList([]);
         }
       })
-      .catch(() => showToast("\u274C Failed to load buyers", "error"));
+      .catch(() => showToast("❌ Failed to load buyers", "error"));
   }, []);
 
   const allCategories = ["All", ...new Set(productList.map(p => p.category || p.Category || "").filter(Boolean))];
@@ -56,7 +54,7 @@ export default function NewOrderForm({ productList, setActiveTab }) {
   const handleAdd = (base) => {
     const variant = variantMap[base];
     const qty = parseInt(qtyMap[base]) || 0;
-    if (!variant || qty <= 0) return showToast("\u2757 Select variant and qty", "error");
+    if (!variant || qty <= 0) return showToast("❗ Select variant and qty", "error");
 
     const updatedCart = [...cart];
     const existingIndex = updatedCart.findIndex(item => item.item === variant.name);
@@ -71,7 +69,7 @@ export default function NewOrderForm({ productList, setActiveTab }) {
     }
     setCart(updatedCart);
     setQtyMap({ ...qtyMap, [base]: "" });
-    showToast("\u2705 Item added", "success");
+    showToast("✅ Item added", "success");
   };
 
   const handleRemove = (index) => {
@@ -82,19 +80,19 @@ export default function NewOrderForm({ productList, setActiveTab }) {
 
   const handleSubmit = async () => {
     if (!buyer.name || cart.length === 0) {
-      showToast("\u26A0\uFE0F Enter buyer and at least one item", "error");
+      showToast("⚠️ Enter buyer and at least one item", "error");
       return;
     }
     try {
-      await exportInvoiceToGoogleSheet({ dealer: buyer, order: cart });
-      showToast("\u2705 Order saved", "success");
+      await exportInvoiceToLocalServer({ buyerName: buyer.name, phone: buyer.phone || "", order: cart });
+      showToast("✅ Order saved", "success");
       setBuyer({});
       setCart([]);
       setQtyMap({});
       setVariantMap({});
       clearCart();
     } catch (err) {
-      showToast("\u274C Failed to save order", "error");
+      showToast("❌ Failed to save order", "error");
     }
   };
 
@@ -108,16 +106,14 @@ export default function NewOrderForm({ productList, setActiveTab }) {
   return (
     <div className="space-y-4">
       <div className="flex overflow-x-auto gap-2 px-2 sticky top-10 z-30 bg-white py-2 shadow-sm">
-
         {allCategories.map((cat, i) => (
           <button
             key={i}
             className={`px-2 py-1 rounded-full border text-xs font-medium transition whitespace-nowrap ${
-  selectedCategory === cat
-    ? "bg-blue-600 text-white"
-    : "bg-gray-100 hover:bg-gray-200"
-}`}
-
+              selectedCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
             onClick={() => setSelectedCategory(cat)}
           >
             {cat}
@@ -252,19 +248,11 @@ export default function NewOrderForm({ productList, setActiveTab }) {
         </div>
       </div>
 
-      
-
-
-
-            <button type="button" onClick={() => setActiveTab("invoice")}
-
-
-              className="fixed bottom-5 left-5 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm"
-            >
-              🔙 Back to Invoice
-            </button>
-		
-
+      <button type="button" onClick={() => setActiveTab("invoice")}
+        className="fixed bottom-5 left-5 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm"
+      >
+        🔙 Back to Invoice
+      </button>
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function QuickPendingPanel({
   return (
     <div className="space-y-1 text-sm h-[300px] overflow-auto px-1 whitespace-nowrap">
       {Array.isArray(pendingQueue) && pendingQueue.length === 0 && (
-        <div className="text-gray-500 text-xs">📝 No pending items.</div>
+        <div className="text-gray-500 text-xs">📝 pending order देखने के लिए सूची देखें.</div>
       )}
 
       {Array.isArray(pendingQueue) &&

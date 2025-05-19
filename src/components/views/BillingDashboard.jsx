@@ -87,7 +87,6 @@ export default function BillingDashboard() {
     setInvoiceList(updated);
     showToast("✅ Item added to invoice", "success");
 
-    // Clear fields after adding
     setItemName("");
     setSelectedBatch("");
     setMfg("");
@@ -122,41 +121,6 @@ export default function BillingDashboard() {
     }
   };
 
-  const quickPendingUI = (
-    <QuickPendingPanel
-      pendingOrders={pendingOrders}
-      buyerList={buyerList}
-      setSelectedBuyer={setSelectedBuyer}
-      setItemName={setItemName}
-      setQty={setQty}
-      handleAdd={handleAdd}
-      showToast={showToast}
-      invoiceList={invoiceList}
-      pendingQueue={pendingQueue}
-      autoScrollToNext={true}
-    />
-  );
-
-  const productEntryUI = (
-    <ProductEntrySection
-      productList={productList}
-      itemName={itemName}
-      setItemName={setItemName}
-      selectedBatch={selectedBatch}
-      setSelectedBatch={setSelectedBatch}
-      mfg={mfg}
-      setMfg={setMfg}
-      exp={exp}
-      setExp={setExp}
-      rate={rate}
-      setRate={setRate}
-      qty={qty}
-      setQty={setQty}
-      handleAdd={handleAdd}
-      onAfterAdd={handleAfterAdd}
-    />
-  );
-
   return (
     <div ref={topRef} className="min-h-screen max-w-6xl mx-auto p-4 space-y-4 text-gray-700 pb-[80px]">
       {activeTab === "summary" && (
@@ -169,11 +133,8 @@ export default function BillingDashboard() {
 
       {activeTab === "invoice" && (
         <>
-          
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start border-t pt-4">
             <div className="bg-blue-100 rounded-xl shadow p-4 border h-full overflow-y-auto max-h-[400px] pb-[80px] sticky top-0 z-10 md:static">
-
               <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">
                 ✍️ Product Entry ({invoiceList.length}) {selectedBuyer?.name && (
                   <span className="ml-2 px-2 py-0.5 rounded bg-blue-200 text-blue-800 text-xs">
@@ -181,16 +142,39 @@ export default function BillingDashboard() {
                   </span>
                 )}
               </h3>
-              {productEntryUI}
+              <ProductEntrySection
+                productList={productList}
+                itemName={itemName}
+                setItemName={setItemName}
+                selectedBatch={selectedBatch}
+                setSelectedBatch={setSelectedBatch}
+                mfg={mfg}
+                setMfg={setMfg}
+                exp={exp}
+                setExp={setExp}
+                rate={rate}
+                setRate={setRate}
+                qty={qty}
+                setQty={setQty}
+                handleAdd={handleAdd}
+                onAfterAdd={handleAfterAdd}
+              />
             </div>
 
-            <div className={`rounded-xl shadow p-4 border relative overflow-auto h-[400px] ${
-  selectedPendingBuyer && pendingQueue.length > 0 ? 'bg-yellow-100' : 'bg-slate-200'
-}`}>
-
-
+            <div className={`rounded-xl shadow p-4 border relative overflow-auto h-[400px] ${selectedPendingBuyer && pendingQueue.length > 0 ? 'bg-yellow-100' : 'bg-slate-200'}`}>
               <h3 className="text-sm font-bold text-gray-700 mb-2 border-b pb-1">📌 Pending Items ({pendingQueue.length})</h3>
-              {quickPendingUI}
+              <QuickPendingPanel
+                pendingOrders={pendingOrders}
+                buyerList={buyerList}
+                setSelectedBuyer={setSelectedBuyer}
+                setItemName={setItemName}
+                setQty={setQty}
+                handleAdd={handleAdd}
+                showToast={showToast}
+                invoiceList={invoiceList}
+                pendingQueue={pendingQueue}
+                autoScrollToNext={true}
+              />
               <div className="absolute bottom-0 left-0 w-full h-6 bg-gradient-to-b from-transparent to-slate-200"></div>
             </div>
 
@@ -220,32 +204,7 @@ export default function BillingDashboard() {
             </div>
           </div>
 
-          <div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-2 border-t shadow-inner flex flex-col sm:flex-row justify-between items-center gap-2 px-3">
-            <button
-              onClick={() => setActiveTab("new")}
-              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded shadow text-xs w-full sm:w-auto"
-
-            >
-              🆕 Punch New Order
-            </button>
-
-
-
-
-<div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-2 border-t shadow-inner flex flex-col sm:flex-row justify-between items-center gap-2 px-3">
-            <button
-    
-    onClick={() => setActiveTab("summary")}
-className="bg-blue-600 hover:bg-green-700 text-white px-2 py-1 rounded shadow text-xs w-full sm:w-auto"
->
-  
-    🔎 View Summary
-  </button>
-</div>
-
-
-
-
+          <div ref={bottomRef} className="sticky bottom-0 z-20 bg-white py-2 border-t shadow-inner px-3">
             <ExportActions
               selectedBuyer={selectedBuyer}
               invoiceList={invoiceList}
@@ -271,6 +230,10 @@ className="bg-blue-600 hover:bg-green-700 text-white px-2 py-1 rounded shadow te
           <NewOrderForm productList={productList} setActiveTab={setActiveTab} />
         </div>
       )}
+
+      {/* Hidden buttons for tab switching from ExportActions */}
+      <button id="new-order-tab" className="hidden" onClick={() => setActiveTab("new")}></button>
+      <button id="view-summary-tab" className="hidden" onClick={() => setActiveTab("summary")}></button>
     </div>
   );
 }
